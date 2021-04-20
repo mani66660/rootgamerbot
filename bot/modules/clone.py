@@ -15,7 +15,7 @@ def cloneNode(update,context):
     else:
         uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
     if uname is not None:
-        hehe = f'\n👤 {uname} \n\n🔐 <i>To access GDrive Link, \nJoin to the ➤ <a href="https://groups.google.com/g/tazmirrorbot"><b>Google Group</b></a>.</i>'
+        hehe = f'\n👤 {uname} \n\n<i><b>💥 Powered by Taz 💥</b></i>'
     if len(args) > 1:
         link = args[1]
         msg = sendMessage(f"Cloning: <code>{link}</code>",context.bot,update)
