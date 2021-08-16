@@ -1,29 +1,25 @@
-FROM iamliquidx/megasdk:latest
+FROM python:slim
 
-WORKDIR /usr/src/app
-RUN chmod 777 /usr/src/app
-
-RUN apt-get -qq update && \
-    apt-get install -y software-properties-common && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-add-repository non-free && \
+WORKDIR /
+# Deps
+RUN if [ "$(uname -m)" = "aarch64" ] ; then \
+        export HOST_CPU_ARCH=arm64; \
+    elif [ "$(uname -m)" = "x86_64" ]; then \
+        export HOST_CPU_ARCH=amd64; \
+    fi && \
+    sed -i 's/main/main non-free/g' /etc/apt/sources.list && \
     apt-get -qq update && \
-    apt-get -qq install -y p7zip-full p7zip-rar aria2 curl pv jq ffmpeg locales python3-lxml && \
-    apt-get purge -y software-properties-common
+    apt-get -qq install -y tzdata curl aria2 p7zip-full p7zip-rar wget xz-utils libmagic-dev gcc && \
+    apt-get -y autoremove && rm -rf /var/lib/apt/lists/* && apt-get clean && \
+    wget -q https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-${HOST_CPU_ARCH}-static.tar.xz && \
+    tar -xf ff*.tar.xz && rm -rf *.tar.xz && \
+    mv ff*/ff* /usr/local/bin/ && rm -rf ff* && \
+    wget -q https://github.com/viswanathbalusu/megasdkrest/releases/download/v0.1.1/megasdkrest-${HOST_CPU_ARCH} -O /usr/local/bin/megasdkrest && \
+    chmod a+x /usr/local/bin/megasdkrest && mkdir /app/ && chmod 777 /app/ && \
+    pip3 install --no-cache-dir MirrorX && \
+    apt-get purge -yqq gcc && apt-get -y autoremove && rm -rf /var/lib/apt/lists/* && apt-get clean
 
-COPY requirements.txt .
-COPY extract /usr/local/bin
-COPY pextract /usr/local/bin
-RUN chmod +x /usr/local/bin/extract && chmod +x /usr/local/bin/pextract
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN locale-gen en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-COPY . .
-COPY netrc /root/.netrc
-RUN chmod +x aria.sh
+WORKDIR /app
 
-CMD ["bash","start.sh"]
-
-
+# Script Which Starts the Bot
+CMD ["bash", "start.sh"]
